@@ -17,6 +17,7 @@ import {
 } from "@/components/prototype/primitives";
 import { db } from "@/lib/db";
 
+
 export const dynamic = "force-dynamic";
 
 interface SubaccountStats {
