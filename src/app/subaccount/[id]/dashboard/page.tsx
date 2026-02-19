@@ -16,7 +16,6 @@ import {
   SurfaceCard,
 } from "@/components/prototype/primitives";
 import { db } from "@/lib/db";
-import { getApiBaseUrl } from "@/lib/server-api";
 
 export const dynamic = "force-dynamic";
 
@@ -42,23 +41,16 @@ const STAGE_CONFIG: {
 
 async function fetchStats(slug: string): Promise<SubaccountStats> {
   try {
-    const baseUrl = await getApiBaseUrl();
-    const response = await fetch(`${baseUrl}/api/stats/subaccount/${encodeURIComponent(slug)}`, {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return { contacts: 0, conversations: 0, booked: 0, replyRate: 0 };
-    }
-
-    const data = (await response.json()) as Partial<SubaccountStats>;
-
-    return {
-      contacts: typeof data.contacts === "number" ? data.contacts : 0,
-      conversations: typeof data.conversations === "number" ? data.conversations : 0,
-      booked: typeof data.booked === "number" ? data.booked : 0,
-      replyRate: typeof data.replyRate === "number" ? data.replyRate : 0,
-    };
+    const subaccount = await db.subaccount.findUnique({ where: { slug }, select: { id: true } });
+    if (!subaccount) return { contacts: 0, conversations: 0, booked: 0, replyRate: 0 };
+    const [contacts, conversations, booked, inboundConvos] = await Promise.all([
+      db.contact.count({ where: { subaccountId: subaccount.id } }),
+      db.conversation.count({ where: { subaccountId: subaccount.id } }),
+      db.contact.count({ where: { subaccountId: subaccount.id, stage: "BOOKED" } }),
+      db.conversation.count({ where: { subaccountId: subaccount.id, messages: { some: { direction: "INBOUND" } } } }),
+    ]);
+    const replyRate = conversations > 0 ? Math.round((inboundConvos / conversations) * 100) : 0;
+    return { contacts, conversations, booked, replyRate };
   } catch {
     return { contacts: 0, conversations: 0, booked: 0, replyRate: 0 };
   }

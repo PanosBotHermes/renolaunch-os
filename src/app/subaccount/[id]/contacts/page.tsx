@@ -6,27 +6,23 @@ import {
   SecondaryButton,
   SurfaceCard,
 } from "@/components/prototype/primitives";
-import { getApiBaseUrl } from "@/lib/server-api";
+import { db } from "@/lib/db";
 import { ContactsTableClient } from "./ContactsTableClient";
 import type { ContactListItem } from "./types";
 
 export const dynamic = "force-dynamic";
 
-interface ContactsResponse {
-  contacts?: ContactListItem[];
-}
-
 async function fetchContacts(slug: string): Promise<ContactListItem[]> {
   try {
-    const baseUrl = await getApiBaseUrl();
-    const response = await fetch(
-      `${baseUrl}/api/contacts?subaccountId=${encodeURIComponent(slug)}&limit=20`,
-      { cache: "no-store" },
-    );
-
-    if (!response.ok) return [];
-    const data = (await response.json()) as ContactsResponse;
-    return Array.isArray(data.contacts) ? data.contacts : [];
+    const subaccount = await db.subaccount.findUnique({ where: { slug }, select: { id: true } });
+    if (!subaccount) return [];
+    const contacts = await db.contact.findMany({
+      where: { subaccountId: subaccount.id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: { id: true, businessName: true, contactName: true, phone: true, city: true, state: true, trade: true, status: true, stage: true, createdAt: true },
+    });
+    return contacts.map(c => ({ ...c, createdAt: c.createdAt.toISOString() })) as ContactListItem[];
   } catch {
     return [];
   }

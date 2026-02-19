@@ -1,75 +1,169 @@
-'use client';
+"use client";
 
 import { ArrowLeft, Search, SendHorizontal, Sparkles } from "lucide-react";
-import { useMemo, useState } from "react";
-import { FieldInput, PrimaryButton, StatusBadge } from "@/components/prototype/primitives";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  EmptyState,
+  FieldInput,
+  PrimaryButton,
+  StatusBadge,
+} from "@/components/prototype/primitives";
 import { cn } from "@/lib/cn";
 
 type InboxTab = "all" | "unread" | "ai";
 
-interface Conversation {
+interface ConversationSummary {
   id: string;
-  name: string;
-  trade: string;
-  city: string;
-  preview: string;
-  time: string;
-  unread: boolean;
+  status: "NEW" | "REPLIED" | "AI_HANDLING" | "CLOSED";
+  aiHandling: boolean;
+  lastMessageAt: string | null;
+  createdAt: string;
+  contact: {
+    id: string;
+    businessName: string;
+    phone: string;
+  };
+  lastMessage: {
+    body: string;
+    direction: "OUTBOUND" | "INBOUND";
+    sentAt: string;
+  } | null;
 }
 
-interface Message {
+interface ConversationMessage {
   id: string;
-  type: "sent" | "received";
-  text: string;
-  ai?: boolean;
+  direction: "OUTBOUND" | "INBOUND";
+  body: string;
+  isAI: boolean;
+  sentAt: string;
 }
 
-const conversations: Conversation[] = [
-  {
-    id: "c1",
-    name: "Maya Santos",
-    trade: "Roofing",
-    city: "Reno, NV",
-    preview: "Can you fit me in Thursday afternoon?",
-    time: "2m",
-    unread: true,
-  },
-  {
-    id: "c2",
-    name: "Eli Turner",
-    trade: "Plumbing",
-    city: "Las Vegas, NV",
-    preview: "Thanks, that quote looks good.",
-    time: "18m",
-    unread: true,
-  },
-  {
-    id: "c3",
-    name: "Jordan Patel",
-    trade: "HVAC",
-    city: "Sacramento, CA",
-    preview: "Can we move this to next week?",
-    time: "1h",
-    unread: false,
-  },
-];
+function formatRelativeTime(value: string | null) {
+  if (!value) return "-";
 
-const messageThread: Message[] = [
-  { id: "m1", type: "received", text: "Hey, I need a roof inspection this week." },
-  { id: "m2", type: "sent", text: "Absolutely. We have openings Thursday and Friday." },
-  { id: "m3", type: "sent", text: "AI suggested this follow-up template.", ai: true },
-  { id: "m4", type: "received", text: "Thursday at 2pm works for me." },
-];
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) return "-";
+
+  const diffMs = Date.now() - timestamp;
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 1) return "now";
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+
+  return new Date(value).toLocaleDateString();
+}
 
 export default function SubaccountInboxPage() {
+  const params = useParams<{ id: string }>();
+  const slug = typeof params.id === "string" ? params.id : "";
+
   const [activeTab, setActiveTab] = useState<InboxTab>("all");
-  const [selectedConversationId, setSelectedConversationId] = useState<string>(conversations[0].id);
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
+  const [search, setSearch] = useState("");
+
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  useEffect(() => {
+    async function fetchConversations() {
+      if (!slug) {
+        setConversations([]);
+        setSelectedConversationId(null);
+        setLoadingConversations(false);
+        return;
+      }
+
+      setLoadingConversations(true);
+
+      try {
+        const response = await fetch(`/api/conversations?subaccountId=${encodeURIComponent(slug)}&limit=20`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          setConversations([]);
+          setSelectedConversationId(null);
+          return;
+        }
+
+        const data = (await response.json()) as unknown;
+        const nextConversations = Array.isArray(data) ? (data as ConversationSummary[]) : [];
+
+        setConversations(nextConversations);
+        setSelectedConversationId(nextConversations[0]?.id ?? null);
+      } catch {
+        setConversations([]);
+        setSelectedConversationId(null);
+      } finally {
+        setLoadingConversations(false);
+      }
+    }
+
+    void fetchConversations();
+  }, [slug]);
+
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    setLoadingMessages(true);
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/messages`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        setMessages([]);
+        return;
+      }
+
+      const data = (await response.json()) as unknown;
+      setMessages(Array.isArray(data) ? (data as ConversationMessage[]) : []);
+    } catch {
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConversationId) {
+      setMessages([]);
+      return;
+    }
+
+    void fetchMessages(selectedConversationId);
+  }, [fetchMessages, selectedConversationId]);
+
+  const filteredConversations = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+
+    return conversations.filter((conversation) => {
+      if (activeTab === "unread" && conversation.status !== "NEW") return false;
+      if (activeTab === "ai" && !conversation.aiHandling) return false;
+
+      if (!needle) return true;
+
+      const haystack = `${conversation.contact.businessName} ${conversation.contact.phone} ${conversation.lastMessage?.body ?? ""}`.toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [activeTab, conversations, search]);
 
   const selectedConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === selectedConversationId) ?? conversations[0],
-    [selectedConversationId],
+    () => conversations.find((conversation) => conversation.id === selectedConversationId) ?? null,
+    [conversations, selectedConversationId],
   );
+
+  const hasConversations = conversations.length > 0;
 
   return (
     <div className="glass-card h-[calc(100vh-6.8rem)] overflow-hidden md:h-[calc(100vh-8.5rem)]">
@@ -79,12 +173,25 @@ export default function SubaccountInboxPage() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             selectedConversationId={selectedConversationId}
+            conversations={filteredConversations}
+            loading={loadingConversations}
+            search={search}
+            onSearchChange={setSearch}
             onSelect={setSelectedConversationId}
           />
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col">
-          <ThreadView selectedConversation={selectedConversation} />
+          {hasConversations ? (
+            <ThreadView selectedConversation={selectedConversation} messages={messages} loadingMessages={loadingMessages} />
+          ) : (
+            <div className="m-3">
+              <EmptyState
+                title="No conversations yet"
+                detail="When messages exist for this subaccount, they will appear here."
+              />
+            </div>
+          )}
         </section>
       </div>
 
@@ -95,8 +202,12 @@ export default function SubaccountInboxPage() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               selectedConversationId={selectedConversationId}
-              onSelect={(id) => {
-                setSelectedConversationId(id);
+              conversations={filteredConversations}
+              loading={loadingConversations}
+              search={search}
+              onSearchChange={setSearch}
+              onSelect={(conversationId) => {
+                setSelectedConversationId(conversationId);
                 setMobileView("thread");
               }}
             />
@@ -114,7 +225,17 @@ export default function SubaccountInboxPage() {
               </button>
               <p className="text-sm font-semibold text-reno-text-1">Back</p>
             </div>
-            <ThreadView selectedConversation={selectedConversation} />
+
+            {hasConversations ? (
+              <ThreadView selectedConversation={selectedConversation} messages={messages} loadingMessages={loadingMessages} />
+            ) : (
+              <div className="m-3">
+                <EmptyState
+                  title="No conversations yet"
+                  detail="When messages exist for this subaccount, they will appear here."
+                />
+              </div>
+            )}
           </section>
         )}
       </div>
@@ -126,11 +247,19 @@ function ConversationList({
   activeTab,
   onTabChange,
   selectedConversationId,
+  conversations,
+  loading,
+  search,
+  onSearchChange,
   onSelect,
 }: {
   activeTab: InboxTab;
   onTabChange: (tab: InboxTab) => void;
-  selectedConversationId: string;
+  selectedConversationId: string | null;
+  conversations: ConversationSummary[];
+  loading: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -138,7 +267,13 @@ function ConversationList({
       <div className="space-y-4 border-b border-white/10 p-4">
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-reno-text-2" />
-          <FieldInput aria-label="Search conversations" className="pl-9" placeholder="Search conversations..." />
+          <FieldInput
+            aria-label="Search conversations"
+            className="pl-9"
+            placeholder="Search conversations..."
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-2">
@@ -165,6 +300,17 @@ function ConversationList({
       </div>
 
       <div className="h-[calc(100%-8.6rem)] space-y-2 overflow-y-auto p-3">
+        {loading ? (
+          <p className="px-2 py-8 text-center text-sm text-reno-text-2">Loading conversations...</p>
+        ) : null}
+
+        {!loading && conversations.length === 0 ? (
+          <EmptyState
+            title="No conversations found"
+            detail="Try changing filters, or wait for new inbound and outbound activity."
+          />
+        ) : null}
+
         {conversations.map((conversation) => (
           <button
             key={conversation.id}
@@ -175,11 +321,11 @@ function ConversationList({
               conversation.id === selectedConversationId
                 ? "border-l-indigo-500 bg-indigo-500/10"
                 : "border-l-transparent",
-              conversation.unread && "bg-white/[0.06]",
+              conversation.status === "NEW" && "bg-white/[0.06]",
             )}
           >
             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-sm font-semibold text-reno-text-1">
-              {conversation.name
+              {conversation.contact.businessName
                 .split(" ")
                 .map((segment) => segment[0])
                 .join("")
@@ -187,12 +333,16 @@ function ConversationList({
             </span>
             <span className="min-w-0 flex-1">
               <span className="mb-1 flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-semibold text-reno-text-1">{conversation.name}</span>
-                <span className="num-tabular shrink-0 text-sm text-reno-text-3">{conversation.time}</span>
+                <span className="truncate text-sm font-semibold text-reno-text-1">{conversation.contact.businessName}</span>
+                <span className="num-tabular shrink-0 text-sm text-reno-text-3">
+                  {formatRelativeTime(conversation.lastMessageAt ?? conversation.createdAt)}
+                </span>
               </span>
-              <span className="block truncate text-sm text-reno-text-2">{conversation.preview}</span>
+              <span className="block truncate text-sm text-reno-text-2">
+                {conversation.lastMessage?.body ?? "No messages yet"}
+              </span>
             </span>
-            {conversation.unread ? <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-white" /> : null}
+            {conversation.status === "NEW" ? <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-white" /> : null}
           </button>
         ))}
       </div>
@@ -200,36 +350,75 @@ function ConversationList({
   );
 }
 
-function ThreadView({ selectedConversation }: { selectedConversation: Conversation }) {
+function ThreadView({
+  selectedConversation,
+  messages,
+  loadingMessages,
+}: {
+  selectedConversation: ConversationSummary | null;
+  messages: ConversationMessage[];
+  loadingMessages: boolean;
+}) {
+  if (!selectedConversation) {
+    return (
+      <div className="m-3">
+        <EmptyState title="Select a conversation" detail="Pick a conversation from the left panel to view the full thread." />
+      </div>
+    );
+  }
+
   return (
     <>
       <header className="glass-card m-3 flex items-center justify-between gap-3 rounded-[10px] px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold text-reno-text-1">{selectedConversation.name}</h2>
+          <h2 className="text-sm font-semibold text-reno-text-1">{selectedConversation.contact.businessName}</h2>
           <div className="mt-1 flex items-center gap-2 text-sm text-reno-text-2">
-            <StatusBadge tone="accent">{selectedConversation.trade}</StatusBadge>
-            <span>{selectedConversation.city}</span>
+            <StatusBadge tone="accent">{selectedConversation.contact.phone}</StatusBadge>
+            {selectedConversation.aiHandling ? (
+              <span className="inline-flex items-center gap-1 rounded-pill border border-violet-400/40 bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+                <Sparkles size={11} />
+                AI Handling
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-3 pb-3">
-        {messageThread.map((message) => (
-          <div key={message.id} className={cn("max-w-[85%] rounded-[12px] px-4 py-3 text-sm md:max-w-[70%]", message.type === "sent" ? "ml-auto bg-gradient-to-br from-indigo-500 to-violet-500 text-white" : "glass-card text-reno-text-1")}>
-            {message.ai ? (
+        {loadingMessages ? <p className="text-sm text-reno-text-2">Loading messages...</p> : null}
+
+        {!loadingMessages && messages.length === 0 ? (
+          <EmptyState title="No messages yet" detail="This conversation does not have message history yet." />
+        ) : null}
+
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={cn(
+              "max-w-[85%] rounded-[12px] px-4 py-3 text-sm md:max-w-[70%]",
+              message.direction === "OUTBOUND"
+                ? "ml-auto bg-gradient-to-br from-indigo-500 to-violet-500 text-white"
+                : "glass-card text-reno-text-1",
+            )}
+          >
+            {message.isAI ? (
               <span className="mb-2 inline-flex items-center gap-1 rounded-pill border border-violet-400/40 bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
                 <Sparkles size={11} />
                 AI
               </span>
             ) : null}
-            <p>{message.text}</p>
+            <p>{message.body}</p>
           </div>
         ))}
       </div>
 
       <footer className="border-t border-white/10 p-3">
         <div className="glass-card flex items-center gap-2 rounded-pill p-2">
-          <FieldInput aria-label="Message input" className="h-11 flex-1 rounded-pill border-none bg-transparent focus:ring-0" placeholder="Type a message..." />
+          <FieldInput
+            aria-label="Message input"
+            className="h-11 flex-1 rounded-pill border-none bg-transparent focus:ring-0"
+            placeholder="Type a message..."
+          />
           <PrimaryButton className="h-11 rounded-pill px-5">
             <SendHorizontal size={15} />
             Send

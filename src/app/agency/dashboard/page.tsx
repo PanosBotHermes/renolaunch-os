@@ -1,22 +1,44 @@
-'use client';
+"use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
+  BellRing,
   Building2,
+  CircleCheckBig,
   MessageSquareText,
   Percent,
   ShieldCheck,
-  CircleCheckBig,
-  BellRing,
   TriangleAlert,
 } from "lucide-react";
-import { SecondaryButton, StatCard, StatusBadge, SurfaceCard } from "@/components/prototype/primitives";
+import {
+  SecondaryButton,
+  StatCard,
+  StatusBadge,
+  SurfaceCard,
+} from "@/components/prototype/primitives";
 
-import { subaccountOptions } from "@/lib/accounts";
+interface AgencyStats {
+  totalSubaccounts: number;
+  totalContacts: number;
+  totalConversations: number;
+  activeSubaccounts: number;
+}
 
-const clientRows = subaccountOptions.map((s) => ({ name: s.name, trade: s.trade, status: "Active", leads: "—", sms: "—", replyRate: "—", health: "—", tone: "success" as const }));
-
+interface SubaccountRow {
+  id: string;
+  name: string;
+  slug: string;
+  trade: string | null;
+  status: "ACTIVE" | "INACTIVE" | "PENDING";
+  plan: "BASIC" | "PRO" | "AGENCY";
+  healthScore: number;
+  dailyLimit: number;
+  _count: {
+    contacts: number;
+  };
+}
 
 const activity = [
   {
@@ -43,20 +65,134 @@ const activity = [
 ];
 
 export default function AgencyDashboardPage() {
-  const today = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date());
+  const [stats, setStats] = useState<AgencyStats>({
+    totalSubaccounts: 0,
+    totalContacts: 0,
+    totalConversations: 0,
+    activeSubaccounts: 0,
+  });
+  const [subaccounts, setSubaccounts] = useState<SubaccountRow[]>([]);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const [statsResponse, subaccountsResponse] = await Promise.all([
+          fetch("/api/stats/agency", { cache: "no-store" }),
+          fetch("/api/subaccounts", { cache: "no-store" }),
+        ]);
+
+        if (statsResponse.ok) {
+          const statsData = (await statsResponse.json()) as Partial<AgencyStats>;
+          setStats({
+            totalSubaccounts:
+              typeof statsData.totalSubaccounts === "number" ? statsData.totalSubaccounts : 0,
+            totalContacts: typeof statsData.totalContacts === "number" ? statsData.totalContacts : 0,
+            totalConversations:
+              typeof statsData.totalConversations === "number"
+                ? statsData.totalConversations
+                : 0,
+            activeSubaccounts:
+              typeof statsData.activeSubaccounts === "number" ? statsData.activeSubaccounts : 0,
+          });
+        }
+
+        if (subaccountsResponse.ok) {
+          const subaccountsData = (await subaccountsResponse.json()) as unknown;
+          setSubaccounts(Array.isArray(subaccountsData) ? (subaccountsData as SubaccountRow[]) : []);
+        }
+      } catch {
+        setStats({
+          totalSubaccounts: 0,
+          totalContacts: 0,
+          totalConversations: 0,
+          activeSubaccounts: 0,
+        });
+        setSubaccounts([]);
+      }
+    }
+
+    void fetchDashboardData();
+  }, []);
+
+  const averageHealth = useMemo(() => {
+    if (subaccounts.length === 0) return 0;
+    const totalHealth = subaccounts.reduce((sum, row) => sum + row.healthScore, 0);
+    return Math.round(totalHealth / subaccounts.length);
+  }, [subaccounts]);
+
+  const clientRows = useMemo(
+    () =>
+      subaccounts.map((row) => ({
+        id: row.id,
+        name: row.name,
+        status:
+          row.status === "ACTIVE"
+            ? "Active"
+            : row.status === "PENDING"
+              ? "Pending"
+              : "Inactive",
+        leads: row._count.contacts.toLocaleString(),
+        sms: "-",
+        replyRate: "-",
+        health: row.healthScore.toLocaleString(),
+        tone:
+          row.status === "ACTIVE"
+            ? ("success" as const)
+            : row.status === "PENDING"
+              ? ("warning" as const)
+              : ("error" as const),
+      })),
+    [subaccounts],
+  );
+
+  const today = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
 
   return (
     <div className="space-y-6">
       <section className="glass-card p-5 md:p-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-reno-text-1">Good morning, Panos 👋</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-reno-text-1">
+          Good morning, Panos 👋
+        </h2>
         <p className="mt-2 text-sm text-reno-text-2">{today}</p>
       </section>
 
       <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <StatCard title="Active Clients" value="24" icon={Building2} tone="accent" trend="+8%" />
-        <StatCard title="Leads Tracked" value="3,928" icon={MessageSquareText} tone="success" trend="+12%" />
-        <StatCard title="Reply Rate" value="27%" icon={Percent} tone="warning" trend="+2.1%" trendDirection="up" />
-        <StatCard title="Account Health" value="89" icon={ShieldCheck} tone="accent" trend="+4" />
+        <StatCard
+          title="Active Clients"
+          value={stats.activeSubaccounts.toLocaleString()}
+          icon={Building2}
+          tone="accent"
+          trend="Live"
+          trendDirection="neutral"
+        />
+        <StatCard
+          title="Leads Tracked"
+          value={stats.totalContacts.toLocaleString()}
+          icon={MessageSquareText}
+          tone="success"
+          trend="Live"
+          trendDirection="neutral"
+        />
+        <StatCard
+          title="Reply Rate"
+          value="-"
+          icon={Percent}
+          tone="warning"
+          trend="Live"
+          trendDirection="neutral"
+        />
+        <StatCard
+          title="Account Health"
+          value={averageHealth.toLocaleString()}
+          icon={ShieldCheck}
+          tone="accent"
+          trend="Live"
+          trendDirection="neutral"
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
@@ -79,7 +215,10 @@ export default function AgencyDashboardPage() {
               </thead>
               <tbody>
                 {clientRows.map((row) => (
-                  <tr key={row.name} className="border-t border-white/6 transition-colors hover:bg-white/[0.03]">
+                  <tr
+                    key={row.id}
+                    className="border-t border-white/6 transition-colors hover:bg-white/[0.03]"
+                  >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/6 text-xs font-semibold text-reno-text-1">
@@ -107,15 +246,21 @@ export default function AgencyDashboardPage() {
 
           <div className="space-y-3 p-4 md:hidden">
             {clientRows.map((row) => (
-              <div key={`${row.name}-mobile`} className="glass-card p-4">
+              <div key={`${row.id}-mobile`} className="glass-card p-4">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <p className="font-medium text-reno-text-1">{row.name}</p>
                   <StatusBadge tone={row.tone}>{row.status}</StatusBadge>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm">
-                  <p className="text-reno-text-2">Leads <span className="num-tabular text-reno-text-1">{row.leads}</span></p>
-                  <p className="text-reno-text-2">SMS <span className="num-tabular text-reno-text-1">{row.sms}</span></p>
-                  <p className="text-reno-text-2">Reply <span className="num-tabular text-reno-text-1">{row.replyRate}</span></p>
+                  <p className="text-reno-text-2">
+                    Leads <span className="num-tabular text-reno-text-1">{row.leads}</span>
+                  </p>
+                  <p className="text-reno-text-2">
+                    SMS <span className="num-tabular text-reno-text-1">{row.sms}</span>
+                  </p>
+                  <p className="text-reno-text-2">
+                    Reply <span className="num-tabular text-reno-text-1">{row.replyRate}</span>
+                  </p>
                 </div>
               </div>
             ))}
@@ -141,7 +286,9 @@ export default function AgencyDashboardPage() {
               return (
                 <div key={event.title} className="relative pl-10">
                   <span className="absolute left-[15px] top-9 h-10 w-px bg-white/10 last:hidden" />
-                  <span className={`absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full ${toneClass}`}>
+                  <span
+                    className={`absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full ${toneClass}`}
+                  >
                     <Icon size={15} />
                   </span>
                   <p className="text-sm font-medium text-reno-text-1">{event.title}</p>
