@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SubaccountSidebar } from "@/components/layout/SubaccountSidebar";
 import { SubaccountTopBar } from "@/components/layout/SubaccountTopBar";
@@ -10,6 +12,9 @@ export default async function SubaccountLayout({
   children: ReactNode;
   params: Promise<{ id: string }>;
 }) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+
   const { id } = await params;
 
   return (
