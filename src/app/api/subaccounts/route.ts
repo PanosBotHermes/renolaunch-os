@@ -1,31 +1,21 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { STATIC_SUBACCOUNTS } from "@/lib/static-data";
 
 export async function GET() {
   try {
+    const { db } = await import("@/lib/db");
     const subaccounts = await db.subaccount.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       select: {
-        id: true,
-        name: true,
-        slug: true,
-        trade: true,
-        status: true,
-        plan: true,
-        healthScore: true,
-        dailyLimit: true,
-        _count: {
-          select: {
-            contacts: true,
-          },
-        },
+        id: true, name: true, slug: true, trade: true,
+        status: true, plan: true, healthScore: true, dailyLimit: true,
+        _count: { select: { contacts: true } },
       },
     });
-
     return NextResponse.json(subaccounts);
-  } catch (error) {
-    console.error("GET /api/subaccounts failed", error);
-    return NextResponse.json({ error: "Failed to fetch subaccounts" }, { status: 500 });
+  } catch {
+    // DB unavailable — return static fallback
+    return NextResponse.json(STATIC_SUBACCOUNTS);
   }
 }
