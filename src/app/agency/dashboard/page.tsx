@@ -1,75 +1,162 @@
 'use client';
-import { Activity, ArrowUpRight, Building2, MessageSquareText, Percent, ShieldCheck } from "lucide-react";
-import { EmptyState, ProgressBar, SecondaryButton, StatCard, StatusBadge, SurfaceCard } from "@/components/prototype/primitives";
+
+import {
+  Activity,
+  ArrowUpRight,
+  Building2,
+  MessageSquareText,
+  Percent,
+  ShieldCheck,
+  CircleCheckBig,
+  BellRing,
+  TriangleAlert,
+} from "lucide-react";
+import { SecondaryButton, StatCard, StatusBadge, SurfaceCard } from "@/components/prototype/primitives";
+
+const clientRows = [
+  { name: "Sunline Roofing", status: "Healthy", leads: 148, sms: 389, replyRate: "31%", health: "92", tone: "success" as const },
+  { name: "Rivera Plumbing", status: "Monitoring", leads: 82, sms: 226, replyRate: "22%", health: "74", tone: "warning" as const },
+  { name: "NorthPeak HVAC", status: "Needs Attention", leads: 55, sms: 140, replyRate: "14%", health: "48", tone: "error" as const },
+];
+
+const activity = [
+  {
+    title: "Automation flow recovered",
+    detail: "Sunline Roofing campaign resumed after temporary pause.",
+    time: "3m ago",
+    icon: CircleCheckBig,
+    tone: "success" as const,
+  },
+  {
+    title: "Reply spike detected",
+    detail: "Rivera Plumbing received 14 inbound replies in the last hour.",
+    time: "18m ago",
+    icon: BellRing,
+    tone: "info" as const,
+  },
+  {
+    title: "Compliance action required",
+    detail: "NorthPeak HVAC needs updated opt-in wording for A2P compliance.",
+    time: "42m ago",
+    icon: TriangleAlert,
+    tone: "warning" as const,
+  },
+];
 
 export default function AgencyDashboardPage() {
+  const today = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date());
+
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Active Clients" value="0" icon={Building2} tone="accent" />
-        <StatCard title="Leads Tracked" value="0" icon={MessageSquareText} tone="success" />
-        <StatCard title="Reply Rate" value="0%" icon={Percent} tone="warning" />
-        <StatCard title="Account Health" value="0" icon={ShieldCheck} tone="error" />
+      <section className="glass-card p-5 md:p-6">
+        <h2 className="text-2xl font-semibold tracking-tight text-reno-text-1">Good morning, Panos 👋</h2>
+        <p className="mt-2 text-sm text-reno-text-2">{today}</p>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+        <StatCard title="Active Clients" value="24" icon={Building2} tone="accent" trend="+8%" />
+        <StatCard title="Leads Tracked" value="3,928" icon={MessageSquareText} tone="success" trend="+12%" />
+        <StatCard title="Reply Rate" value="27%" icon={Percent} tone="warning" trend="+2.1%" trendDirection="up" />
+        <StatCard title="Account Health" value="89" icon={ShieldCheck} tone="accent" trend="+4" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
         <SurfaceCard className="overflow-hidden">
-          <div className="border-b border-reno-border px-5 py-4">
-            <h2 className="text-base font-semibold text-reno-text-primary">Client Performance</h2>
+          <div className="border-b border-white/10 px-5 py-4">
+            <h3 className="text-base font-semibold text-reno-text-1">Clients</h3>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-sm">
-              <thead className="bg-reno-bg/60 text-left text-xs uppercase tracking-wide text-reno-text-secondary">
+              <thead className="sticky top-0 bg-[rgba(8,13,24,0.9)] text-left text-xs uppercase tracking-[0.08em] text-reno-text-3">
                 <tr>
-                  <th className="px-5 py-3 font-medium">Name</th>
+                  <th className="px-5 py-3 font-medium">Client</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Leads</th>
-                  <th className="px-5 py-3 font-medium">SMS Today</th>
+                  <th className="px-5 py-3 font-medium">SMS</th>
                   <th className="px-5 py-3 font-medium">Reply Rate</th>
-                  <th className="px-5 py-3 font-medium">Health Score</th>
-                  <th className="px-5 py-3 font-medium">Action</th>
+                  <th className="px-5 py-3 font-medium">Health</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td colSpan={7} className="px-5 py-12">
-                    <EmptyState
-                      title="No client data yet"
-                      detail="Connect your first client account to unlock this table."
-                    />
-                  </td>
-                </tr>
+                {clientRows.map((row) => (
+                  <tr key={row.name} className="border-t border-white/6 transition-colors hover:bg-white/[0.03]">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/6 text-xs font-semibold text-reno-text-1">
+                          {row.name
+                            .split(" ")
+                            .map((segment) => segment[0])
+                            .join("")
+                            .slice(0, 2)}
+                        </span>
+                        <span className="font-medium text-reno-text-1">{row.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusBadge tone={row.tone}>{row.status}</StatusBadge>
+                    </td>
+                    <td className="num-tabular px-5 py-3 text-reno-text-2">{row.leads}</td>
+                    <td className="num-tabular px-5 py-3 text-reno-text-2">{row.sms}</td>
+                    <td className="num-tabular px-5 py-3 text-reno-text-2">{row.replyRate}</td>
+                    <td className="num-tabular px-5 py-3 text-reno-text-1">{row.health}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="space-y-3 p-4 md:hidden">
+            {clientRows.map((row) => (
+              <div key={`${row.name}-mobile`} className="glass-card p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="font-medium text-reno-text-1">{row.name}</p>
+                  <StatusBadge tone={row.tone}>{row.status}</StatusBadge>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <p className="text-reno-text-2">Leads <span className="num-tabular text-reno-text-1">{row.leads}</span></p>
+                  <p className="text-reno-text-2">SMS <span className="num-tabular text-reno-text-1">{row.sms}</span></p>
+                  <p className="text-reno-text-2">Reply <span className="num-tabular text-reno-text-1">{row.replyRate}</span></p>
+                </div>
+              </div>
+            ))}
           </div>
         </SurfaceCard>
 
         <SurfaceCard className="p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-reno-text-primary">Recent Activity</h2>
-            <Activity size={16} className="text-reno-text-secondary" />
+            <h3 className="text-base font-semibold text-reno-text-1">Recent Activity</h3>
+            <Activity size={17} className="text-reno-text-2" />
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-card border border-reno-border bg-reno-bg/50 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <StatusBadge>Awaiting Events</StatusBadge>
-                <span className="text-xs text-reno-text-secondary">Now</span>
-              </div>
-              <p className="text-sm text-reno-text-secondary">
-                Activity will appear after client campaigns and lead actions begin.
-              </p>
-              <div className="mt-4">
-                <ProgressBar value={0} />
-              </div>
-            </div>
+            {activity.map((event) => {
+              const Icon = event.icon;
+              const toneClass =
+                event.tone === "success"
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : event.tone === "warning"
+                    ? "bg-amber-500/15 text-amber-300"
+                    : "bg-sky-500/15 text-sky-300";
 
-            <SecondaryButton className="w-full justify-center">
-              View Full Activity Log
-              <ArrowUpRight size={15} />
-            </SecondaryButton>
+              return (
+                <div key={event.title} className="relative pl-10">
+                  <span className="absolute left-[15px] top-9 h-10 w-px bg-white/10 last:hidden" />
+                  <span className={`absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full ${toneClass}`}>
+                    <Icon size={15} />
+                  </span>
+                  <p className="text-sm font-medium text-reno-text-1">{event.title}</p>
+                  <p className="mt-1 text-sm text-reno-text-2">{event.detail}</p>
+                  <p className="mt-1 text-sm text-reno-text-3">{event.time}</p>
+                </div>
+              );
+            })}
           </div>
+
+          <SecondaryButton className="mt-5 w-full justify-center">
+            View Full Activity Log
+            <ArrowUpRight size={15} />
+          </SecondaryButton>
         </SurfaceCard>
       </section>
     </div>

@@ -1,7 +1,30 @@
 @config "../../tailwind.config.ts";
 @import "tailwindcss";
 
-* {
+:root {
+  --reno-bg: #05080f;
+  --reno-surface: #080d18;
+  --reno-card: rgba(255, 255, 255, 0.035);
+  --reno-card-hover: rgba(255, 255, 255, 0.055);
+  --reno-border: rgba(255, 255, 255, 0.08);
+  --reno-border-accent: rgba(99, 102, 241, 0.5);
+  --reno-accent: #6366f1;
+  --reno-accent-2: #8b5cf6;
+  --reno-accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --reno-success: #22c55e;
+  --reno-warning: #f59e0b;
+  --reno-error: #ef4444;
+  --reno-info: #38bdf8;
+  --reno-text-1: #e8edf5;
+  --reno-text-2: #8b9cb8;
+  --reno-text-3: #4a5568;
+  --reno-glow-accent: rgba(99, 102, 241, 0.15);
+  --reno-glow-success: rgba(34, 197, 94, 0.12);
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -10,26 +33,175 @@ body {
   min-height: 100%;
 }
 
-body {
-  background-color: #080c14;
-  color: #f1f5f9;
-  font-family: Inter, system-ui, sans-serif;
+html {
+  color-scheme: dark;
 }
 
+body {
+  margin: 0;
+  background:
+    radial-gradient(80% 70% at 10% -10%, rgba(99, 102, 241, 0.16), transparent 55%),
+    radial-gradient(60% 60% at 95% 0%, rgba(139, 92, 246, 0.12), transparent 58%),
+    var(--reno-bg);
+  color: var(--reno-text-1);
+  font-family: Inter, system-ui, sans-serif;
+  font-feature-settings: "cv01", "cv02", "cv03", "cv04", "ss01";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.35);
+  color: var(--reno-text-1);
+}
+
+/* Smooth scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f1623;
+  background: rgba(255, 255, 255, 0.01);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e2d45;
   border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.65), rgba(139, 92, 246, 0.35));
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6366f1;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.65));
+  background-clip: padding-box;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.02);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+}
+
+.nav-item {
+  transition: all 150ms ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--reno-text-1);
+  transform: translateX(2px);
+}
+
+.nav-item-active {
+  background: rgba(99, 102, 241, 0.12);
+  border-left: 2px solid #6366f1;
+  color: #e8edf5;
+}
+
+.num-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-primary {
+  background: var(--reno-accent-gradient);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+/* Button press */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Fade in for page content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeInUp 300ms ease-out forwards;
+}
+
+/* Skeleton loading pulse */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .text-xs {
+    font-size: 0.875rem !important;
+    line-height: 1.3rem !important;
+  }
 }

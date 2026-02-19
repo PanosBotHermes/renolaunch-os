@@ -1,31 +1,31 @@
 'use client';
+
 import { Megaphone, MessageCircle, SendHorizontal, Zap } from "lucide-react";
-import {
-  EmptyState,
-  PrimaryButton,
-  StatCard,
-  StatusBadge,
-  SurfaceCard,
-} from "@/components/prototype/primitives";
+import { PrimaryButton, StatCard, StatusBadge, SurfaceCard } from "@/components/prototype/primitives";
+
+const campaigns = [
+  { name: "Spring Re-engagement", client: "Sunline Roofing", status: "Active", sent: 420, replies: 103, rate: "24.5%" },
+  { name: "Estimate Follow-up", client: "Rivera Plumbing", status: "Warming", sent: 188, replies: 34, rate: "18.1%" },
+];
 
 export default function AgencySmsPage() {
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Active Campaigns" value="0" icon={Megaphone} tone="accent" />
-        <StatCard title="Messages Sent" value="0" icon={SendHorizontal} tone="success" />
-        <StatCard title="Replies" value="0" icon={MessageCircle} tone="warning" />
-        <StatCard title="Automation Health" value="0" icon={Zap} tone="error" />
+      <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+        <StatCard title="Active Campaigns" value="8" icon={Megaphone} tone="accent" trend="+3" />
+        <StatCard title="Messages Sent" value="18,342" icon={SendHorizontal} tone="success" trend="+11%" />
+        <StatCard title="Replies" value="2,491" icon={MessageCircle} tone="warning" trend="+6%" />
+        <StatCard title="Automation Health" value="96%" icon={Zap} tone="accent" trend="+1.2%" />
       </section>
 
       <SurfaceCard className="overflow-hidden">
-        <div className="border-b border-reno-border px-5 py-4">
-          <h2 className="text-base font-semibold text-reno-text-primary">Active Campaigns</h2>
+        <div className="border-b border-white/10 px-5 py-4">
+          <h2 className="text-base font-semibold text-reno-text-1">Active Campaigns</h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-reno-bg/60 text-left text-xs uppercase tracking-wide text-reno-text-secondary">
+            <thead className="sticky top-0 bg-[rgba(8,13,24,0.88)] text-left text-xs uppercase tracking-[0.08em] text-reno-text-3">
               <tr>
                 <th className="px-5 py-3 font-medium">Campaign</th>
                 <th className="px-5 py-3 font-medium">Client</th>
@@ -36,33 +36,37 @@ export default function AgencySmsPage() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={6} className="px-5 py-12">
-                  <EmptyState
-                    title="No active campaigns"
-                    detail="Create or launch a campaign to start SMS outreach."
-                  />
-                </td>
-              </tr>
+              {campaigns.map((campaign) => (
+                <tr key={campaign.name} className="border-t border-white/6 transition-colors hover:bg-white/[0.03]">
+                  <td className="px-5 py-3 font-medium text-reno-text-1">{campaign.name}</td>
+                  <td className="px-5 py-3 text-reno-text-2">{campaign.client}</td>
+                  <td className="px-5 py-3">
+                    <StatusBadge tone={campaign.status === "Active" ? "success" : "warning"}>{campaign.status}</StatusBadge>
+                  </td>
+                  <td className="num-tabular px-5 py-3 text-reno-text-2">{campaign.sent}</td>
+                  <td className="num-tabular px-5 py-3 text-reno-text-2">{campaign.replies}</td>
+                  <td className="num-tabular px-5 py-3 text-reno-text-2">{campaign.rate}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </SurfaceCard>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-reno-text-primary">Template Library</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-reno-text-1">Template Library</h2>
           <PrimaryButton>Create Template</PrimaryButton>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <SurfaceCard key={index} className="p-5">
+          {["Quote Follow-up", "Missed Call Recovery", "Booking Reminder"].map((template) => (
+            <SurfaceCard key={template} className="p-5">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-reno-text-primary">Draft Template</h3>
-                <StatusBadge tone="default">Empty</StatusBadge>
+                <h3 className="text-sm font-semibold text-reno-text-1">{template}</h3>
+                <StatusBadge tone="accent">AI Optimized</StatusBadge>
               </div>
-              <p className="text-sm text-reno-text-secondary">No body content has been saved yet.</p>
+              <p className="text-sm text-reno-text-2">Short-form message flow ready to deploy to selected client campaigns.</p>
             </SurfaceCard>
           ))}
         </div>

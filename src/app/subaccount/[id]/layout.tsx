@@ -1,5 +1,5 @@
-'use client';
 import type { ReactNode } from "react";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SubaccountSidebar } from "@/components/layout/SubaccountSidebar";
 import { SubaccountTopBar } from "@/components/layout/SubaccountTopBar";
 
@@ -13,10 +13,13 @@ export default async function SubaccountLayout({
   const { id } = await params;
 
   return (
-    <div className="min-h-screen bg-reno-bg text-reno-text-primary">
+    <div className="min-h-screen bg-reno-bg text-reno-text-1">
       <SubaccountSidebar id={id} />
-      <SubaccountTopBar id={id} />
-      <main className="ml-60 px-8 pb-8 pt-24">{children}</main>
+      <SubaccountTopBar />
+      <main className="animate-in px-4 pb-24 pt-20 md:ml-[260px] md:px-8 md:pb-8 md:pt-24">
+        {children}
+      </main>
+      <MobileBottomNav variant="subaccount" id={id} />
     </div>
   );
 }
