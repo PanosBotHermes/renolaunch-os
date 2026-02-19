@@ -13,30 +13,29 @@ import {
 } from "lucide-react";
 import { SecondaryButton, StatCard, StatusBadge, SurfaceCard } from "@/components/prototype/primitives";
 
-const clientRows = [
-  { name: "Sunline Roofing", status: "Healthy", leads: 148, sms: 389, replyRate: "31%", health: "92", tone: "success" as const },
-  { name: "Rivera Plumbing", status: "Monitoring", leads: 82, sms: 226, replyRate: "22%", health: "74", tone: "warning" as const },
-  { name: "NorthPeak HVAC", status: "Needs Attention", leads: 55, sms: 140, replyRate: "14%", health: "48", tone: "error" as const },
-];
+import { subaccountOptions } from "@/lib/accounts";
+
+const clientRows = subaccountOptions.map((s) => ({ name: s.name, trade: s.trade, status: "Active", leads: "—", sms: "—", replyRate: "—", health: "—", tone: "success" as const }));
+
 
 const activity = [
   {
     title: "Automation flow recovered",
-    detail: "Sunline Roofing campaign resumed after temporary pause.",
+    detail: "Raymundo Tree Service campaign resumed after temporary pause.",
     time: "3m ago",
     icon: CircleCheckBig,
     tone: "success" as const,
   },
   {
     title: "Reply spike detected",
-    detail: "Rivera Plumbing received 14 inbound replies in the last hour.",
+    detail: "Created Bathrooms received 14 inbound replies in the last hour.",
     time: "18m ago",
     icon: BellRing,
     tone: "info" as const,
   },
   {
     title: "Compliance action required",
-    detail: "NorthPeak HVAC needs updated opt-in wording for A2P compliance.",
+    detail: "Nations Best Roofing needs updated opt-in wording for A2P compliance.",
     time: "42m ago",
     icon: TriangleAlert,
     tone: "warning" as const,
