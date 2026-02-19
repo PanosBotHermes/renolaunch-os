@@ -3,9 +3,6 @@ import { PipelineBoard } from "./PipelineBoard";
 
 export const dynamic = "force-dynamic";
 
-// Migration cutoff — contacts created before this date are "legacy"
-const LEGACY_CUTOFF = new Date("2026-02-21T00:00:00Z");
-
 export default async function SubaccountPipelinesPage({
   params,
 }: {
@@ -14,6 +11,7 @@ export default async function SubaccountPipelinesPage({
   const { id: slug } = await params;
 
   let stageGroups: Record<string, { id: string; businessName: string; phone: string; city: string | null; state: string | null; createdAt: Date }[]> = {
+    OLD: [],
     NEW_LEAD: [],
     CONTACTED: [],
     REPLIED: [],
@@ -22,9 +20,7 @@ export default async function SubaccountPipelinesPage({
     CLOSED: [],
   };
 
-  let legacyContacts: { id: string; businessName: string; phone: string; city: string | null; state: string | null; stage: string }[] = [];
-  let totalLegacy = 0;
-  let totalActive = 0;
+  let totalContacts = 0;
 
   try {
     const subaccount = await db.subaccount.findUnique({ where: { slug }, select: { id: true } });
@@ -45,14 +41,10 @@ export default async function SubaccountPipelinesPage({
       });
 
       for (const c of contacts) {
-        if (c.createdAt < LEGACY_CUTOFF) {
-          legacyContacts.push({ id: c.id, businessName: c.businessName, phone: c.phone, city: c.city, state: c.state, stage: c.stage });
-          totalLegacy++;
-        } else {
-          stageGroups[c.stage]?.push({ id: c.id, businessName: c.businessName, phone: c.phone, city: c.city, state: c.state, createdAt: c.createdAt });
-          totalActive++;
-        }
+        stageGroups[c.stage]?.push({ id: c.id, businessName: c.businessName, phone: c.phone, city: c.city, state: c.state, createdAt: c.createdAt });
       }
+
+      totalContacts = contacts.length;
     }
   } catch {
     // DB unavailable — show empty state
@@ -61,9 +53,7 @@ export default async function SubaccountPipelinesPage({
   return (
     <PipelineBoard
       stageGroups={stageGroups}
-      legacyContacts={legacyContacts}
-      totalLegacy={totalLegacy}
-      totalActive={totalActive}
+      totalContacts={totalContacts}
     />
   );
 }

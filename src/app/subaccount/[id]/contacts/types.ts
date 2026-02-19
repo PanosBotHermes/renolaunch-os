@@ -7,6 +7,7 @@ export type ContactStatusValue =
   | "DNC";
 
 export type PipelineStageValue =
+  | "OLD"
   | "NEW_LEAD"
   | "CONTACTED"
   | "REPLIED"

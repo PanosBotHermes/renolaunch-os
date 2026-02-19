@@ -12,6 +12,7 @@ model Subaccount {
   name         String
   slug         String           @unique
   trade        String?
+  type         SubaccountType   @default(CLIENT)
   status       SubaccountStatus @default(ACTIVE)
   plan         Plan             @default(PRO)
   contactName  String?
@@ -45,6 +46,8 @@ model Contact {
   updatedAt    DateTime      @updatedAt
 
   conversations Conversation[]
+
+  @@unique([phone, subaccountId], map: "contact_phone_sub")
 }
 
 model Conversation {
@@ -105,6 +108,11 @@ enum Plan {
   AGENCY
 }
 
+enum SubaccountType {
+  AGENCY
+  CLIENT
+}
+
 enum ContactStatus {
   NEW
   CONTACTED
@@ -115,6 +123,7 @@ enum ContactStatus {
 }
 
 enum PipelineStage {
+  OLD
   NEW_LEAD
   CONTACTED
   REPLIED

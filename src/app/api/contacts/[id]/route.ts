@@ -14,6 +14,7 @@ const CONTACT_STATUSES = [
 ] as const satisfies readonly ContactStatus[];
 
 const PIPELINE_STAGES = [
+  "OLD",
   "NEW_LEAD",
   "CONTACTED",
   "REPLIED",

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 const STAGE_CONFIG: { key: PipelineStage; label: string; tone: string }[] = [
+  { key: "OLD",        label: "Old Leads",  tone: "bg-slate-400/20 text-slate-200 border-slate-300/30" },
   { key: "NEW_LEAD",   label: "New",        tone: "bg-indigo-500/20 text-indigo-200 border-indigo-500/30" },
   { key: "CONTACTED",  label: "Contacted",  tone: "bg-blue-500/20 text-blue-200 border-blue-500/30" },
   { key: "REPLIED",    label: "Replied",    tone: "bg-cyan-500/20 text-cyan-200 border-cyan-500/30" },

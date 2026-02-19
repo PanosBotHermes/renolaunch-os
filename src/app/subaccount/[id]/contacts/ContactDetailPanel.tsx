@@ -59,6 +59,7 @@ export function ContactDetailPanel({
           <div className="space-y-2">
             <FieldLabel htmlFor="pipeline-stage">Pipeline Stage</FieldLabel>
             <FieldSelect id="pipeline-stage" defaultValue={contact.stage}>
+              <option value="OLD">Old Leads</option>
               <option value="NEW_LEAD">New Lead</option>
               <option value="CONTACTED">Contacted</option>
               <option value="REPLIED">Replied</option>
