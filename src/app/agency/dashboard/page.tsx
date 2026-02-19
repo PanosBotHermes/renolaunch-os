@@ -164,7 +164,7 @@ export default function AgencyDashboardPage() {
         <StatCard
           title="Active Clients"
           value={stats.activeSubaccounts.toLocaleString()}
-          icon={Building2}
+          icon={<Building2 size={18} />}
           tone="accent"
           trend="Live"
           trendDirection="neutral"
@@ -172,7 +172,7 @@ export default function AgencyDashboardPage() {
         <StatCard
           title="Leads Tracked"
           value={stats.totalContacts.toLocaleString()}
-          icon={MessageSquareText}
+          icon={<MessageSquareText size={18} />}
           tone="success"
           trend="Live"
           trendDirection="neutral"
@@ -180,7 +180,7 @@ export default function AgencyDashboardPage() {
         <StatCard
           title="Reply Rate"
           value="-"
-          icon={Percent}
+          icon={<Percent size={18} />}
           tone="warning"
           trend="Live"
           trendDirection="neutral"
@@ -188,7 +188,7 @@ export default function AgencyDashboardPage() {
         <StatCard
           title="Account Health"
           value={averageHealth.toLocaleString()}
-          icon={ShieldCheck}
+          icon={<ShieldCheck size={18} />}
           tone="accent"
           trend="Live"
           trendDirection="neutral"

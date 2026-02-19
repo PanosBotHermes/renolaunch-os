@@ -8,10 +8,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import type { LucideProps } from "lucide-react";
 import { cn } from "@/lib/cn";
-
-type IconComponent = (props: LucideProps) => ReactNode;
 
 export function SurfaceCard({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("glass-card card-hover", className)}>{children}</div>;
@@ -20,7 +17,7 @@ export function SurfaceCard({ children, className }: { children: ReactNode; clas
 export function StatCard({
   title,
   value,
-  icon: Icon,
+  icon,
   tone = "accent",
   trend = "+0%",
   trendDirection,
@@ -28,7 +25,7 @@ export function StatCard({
 }: {
   title: string;
   value: string;
-  icon: IconComponent;
+  icon: ReactNode;
   tone?: "accent" | "success" | "warning" | "error";
   trend?: string;
   trendDirection?: "up" | "down" | "neutral";
@@ -72,7 +69,7 @@ export function StatCard({
               iconToneStyles[tone],
             )}
           >
-            <Icon size={18} />
+            {icon}
           </span>
         </div>
       </div>

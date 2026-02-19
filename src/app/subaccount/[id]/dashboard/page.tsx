@@ -40,10 +40,10 @@ export default async function SubaccountDashboardPage({ params }: { params: Prom
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <StatCard title="Contacts" value={String(contacts)} icon={Users} tone="accent" trend="Live" trendDirection="neutral" />
-        <StatCard title="Conversations" value={String(conversations)} icon={MessageSquareText} tone="warning" trend="Live" trendDirection="neutral" />
-        <StatCard title="Booked" value={String(booked)} icon={PhoneCall} tone="success" trend="Live" trendDirection="neutral" />
-        <StatCard title="Reply Rate" value={replyRate + "%"} icon={ShieldCheck} tone="accent" trend="Live" trendDirection="neutral" />
+        <StatCard title="Contacts" value={String(contacts)} icon={<Users size={18} />} tone="accent" trend="Live" trendDirection="neutral" />
+        <StatCard title="Conversations" value={String(conversations)} icon={<MessageSquareText size={18} />} tone="warning" trend="Live" trendDirection="neutral" />
+        <StatCard title="Booked" value={String(booked)} icon={<PhoneCall size={18} />} tone="success" trend="Live" trendDirection="neutral" />
+        <StatCard title="Reply Rate" value={replyRate + "%"} icon={<ShieldCheck size={18} />} tone="accent" trend="Live" trendDirection="neutral" />
       </section>
 
       <SurfaceCard className="p-5">
