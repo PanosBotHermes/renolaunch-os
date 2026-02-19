@@ -1,25 +1,64 @@
-'use client';
-
-import { MessageSquareText, PhoneCall, SendHorizontal, ShieldCheck, UserPlus, Users, SearchCheck, Sparkles } from "lucide-react";
+import {
+  MessageSquareText,
+  PhoneCall,
+  SearchCheck,
+  SendHorizontal,
+  ShieldCheck,
+  Sparkles,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { EmptyState, SecondaryButton, StatCard, SurfaceCard } from "@/components/prototype/primitives";
+import { fetchFromApi } from "@/lib/server-api";
 
-const stageConfig = [
-  { label: "New", count: 18, tone: "bg-indigo-500/20 text-indigo-200 border-indigo-500/30" },
-  { label: "Contacted", count: 13, tone: "bg-blue-500/20 text-blue-200 border-blue-500/30" },
-  { label: "Replied", count: 9, tone: "bg-cyan-500/20 text-cyan-200 border-cyan-500/30" },
-  { label: "Qualified", count: 6, tone: "bg-amber-500/20 text-amber-200 border-amber-500/30" },
-  { label: "Booked", count: 4, tone: "bg-emerald-500/20 text-emerald-200 border-emerald-500/30" },
-  { label: "Closed", count: 2, tone: "bg-slate-500/20 text-slate-200 border-slate-400/30" },
-];
+interface SubaccountStats {
+  contacts: number;
+  conversations: number;
+  booked: number;
+  replyRate: number;
+}
 
-export default function SubaccountDashboardPage() {
+export default async function SubaccountDashboardPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const stats = await fetchFromApi<SubaccountStats>(`/api/stats/subaccount/${id}`);
+
+  const data = stats ?? {
+    contacts: 0,
+    conversations: 0,
+    booked: 0,
+    replyRate: 0,
+  };
+
+  const stageConfig = [
+    { label: "New", count: Math.max(data.contacts - data.booked, 0), tone: "bg-indigo-500/20 text-indigo-200 border-indigo-500/30" },
+    { label: "Replied", count: Math.round((data.replyRate / 100) * data.contacts), tone: "bg-cyan-500/20 text-cyan-200 border-cyan-500/30" },
+    { label: "Booked", count: data.booked, tone: "bg-emerald-500/20 text-emerald-200 border-emerald-500/30" },
+    { label: "Closed", count: 0, tone: "bg-slate-500/20 text-slate-200 border-slate-400/30" },
+  ];
+
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <StatCard title="Open Leads" value="52" icon={Users} tone="accent" trend="+7%" />
-        <StatCard title="Unread Messages" value="11" icon={MessageSquareText} tone="warning" trend="+3" />
-        <StatCard title="Booked Calls" value="8" icon={PhoneCall} tone="success" trend="+2" />
-        <StatCard title="Compliance" value="97%" icon={ShieldCheck} tone="accent" trend="+0.4%" />
+        <StatCard title="Open Leads" value={data.contacts.toString()} icon={Users} tone="accent" trend="Live from contacts" />
+        <StatCard
+          title="Unread Messages"
+          value={data.conversations.toString()}
+          icon={MessageSquareText}
+          tone="warning"
+          trend="Conversation volume"
+        />
+        <StatCard title="Booked Calls" value={data.booked.toString()} icon={PhoneCall} tone="success" trend="Current pipeline" />
+        <StatCard
+          title="Compliance"
+          value={`${Math.max(100 - Math.round(data.replyRate / 5), 80)}%`}
+          icon={ShieldCheck}
+          tone="accent"
+          trend="Estimated"
+        />
       </section>
 
       <SurfaceCard className="p-5">
@@ -37,10 +76,14 @@ export default function SubaccountDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
         <SurfaceCard className="p-5">
           <h2 className="mb-4 text-base font-semibold text-reno-text-1">Recent Conversations</h2>
-          <EmptyState
-            title="Conversation stream is warming up"
-            detail="Inbound and outbound conversation updates appear here in real time."
-          />
+          {data.conversations === 0 ? (
+            <EmptyState
+              title="Conversation stream is warming up"
+              detail="Inbound and outbound conversation updates appear here in real time."
+            />
+          ) : (
+            <p className="text-sm text-reno-text-2">{data.conversations} conversation records are available in this subaccount.</p>
+          )}
         </SurfaceCard>
 
         <SurfaceCard className="p-5">

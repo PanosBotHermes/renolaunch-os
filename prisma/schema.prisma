@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subaccount {
+  id           String           @id @default(cuid())
+  name         String
+  slug         String           @unique
+  trade        String?
+  status       SubaccountStatus @default(ACTIVE)
+  plan         Plan             @default(PRO)
+  contactName  String?
+  contactEmail String?
+  healthScore  Int              @default(0)
+  dailyLimit   Int              @default(500)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  contacts      Contact[]
+  conversations Conversation[]
+  campaigns     Campaign[]
+  phoneNumbers  PhoneNumber[]
+}
+
+model Contact {
+  id           String        @id @default(cuid())
+  businessName String
+  contactName  String?
+  phone        String
+  city         String?
+  state        String?
+  trade        String?
+  reviewCount  Int?
+  status       ContactStatus @default(NEW)
+  stage        PipelineStage @default(NEW_LEAD)
+  notes        String?
+  subaccountId String
+  subaccount   Subaccount    @relation(fields: [subaccountId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  conversations Conversation[]
+}
+
+model Conversation {
+  id            String             @id @default(cuid())
+  subaccountId  String
+  subaccount    Subaccount         @relation(fields: [subaccountId], references: [id], onDelete: Cascade)
+  contactId     String
+  contact       Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status        ConversationStatus @default(NEW)
+  aiHandling    Boolean            @default(false)
+  lastMessageAt DateTime?
+  createdAt     DateTime           @default(now())
+
+  messages Message[]
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  body           String
+  isAI           Boolean          @default(false)
+  sentAt         DateTime         @default(now())
+}
+
+model Campaign {
+  id           String         @id @default(cuid())
+  name         String
+  subaccountId String
+  subaccount   Subaccount     @relation(fields: [subaccountId], references: [id], onDelete: Cascade)
+  status       CampaignStatus @default(DRAFT)
+  dailyLimit   Int            @default(500)
+  sentToday    Int            @default(0)
+  replyRate    Float          @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model PhoneNumber {
+  id           String     @id @default(cuid())
+  number       String     @unique
+  subaccountId String
+  subaccount   Subaccount @relation(fields: [subaccountId], references: [id], onDelete: Cascade)
+  a2pStatus    A2PStatus  @default(NONE)
+  createdAt    DateTime   @default(now())
+}
+
+enum SubaccountStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum Plan {
+  BASIC
+  PRO
+  AGENCY
+}
+
+enum ContactStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  QUALIFIED
+  BOOKED
+  DNC
+}
+
+enum PipelineStage {
+  NEW_LEAD
+  CONTACTED
+  REPLIED
+  QUALIFIED
+  BOOKED
+  CLOSED
+}
+
+enum ConversationStatus {
+  NEW
+  REPLIED
+  AI_HANDLING
+  CLOSED
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum A2PStatus {
+  NONE
+  PENDING
+  VERIFIED
+}
