@@ -13,10 +13,10 @@ export default function AgencyReportsPage() {
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <StatCard title="Total Leads" value="3,928" icon={Users} tone="accent" trend="+9.2%" />
-        <StatCard title="Reply Trend" value="27%" icon={TrendingUp} tone="success" trend="+2.4%" />
-        <StatCard title="Conversion" value="14.1%" icon={BarChart3} tone="warning" trend="+0.8%" />
-        <StatCard title="Compliance" value="98%" icon={ShieldCheck} tone="accent" trend="+1.1%" />
+        <StatCard title="Total Leads" value="3,928" icon={<Users size={18} />} tone="accent" trend="+9.2%" />
+        <StatCard title="Reply Trend" value="27%" icon={<TrendingUp size={18} />} tone="success" trend="+2.4%" />
+        <StatCard title="Conversion" value="14.1%" icon={<BarChart3 size={18} />} tone="warning" trend="+0.8%" />
+        <StatCard title="Compliance" value="98%" icon={<ShieldCheck size={18} />} tone="accent" trend="+1.1%" />
       </section>
 
       <SurfaceCard className="p-5">

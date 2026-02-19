@@ -12,10 +12,10 @@ export default function AgencySmsPage() {
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-        <StatCard title="Active Campaigns" value="8" icon={Megaphone} tone="accent" trend="+3" />
-        <StatCard title="Messages Sent" value="18,342" icon={SendHorizontal} tone="success" trend="+11%" />
-        <StatCard title="Replies" value="2,491" icon={MessageCircle} tone="warning" trend="+6%" />
-        <StatCard title="Automation Health" value="96%" icon={Zap} tone="accent" trend="+1.2%" />
+        <StatCard title="Active Campaigns" value="8" icon={<Megaphone size={18} />} tone="accent" trend="+3" />
+        <StatCard title="Messages Sent" value="18,342" icon={<SendHorizontal size={18} />} tone="success" trend="+11%" />
+        <StatCard title="Replies" value="2,491" icon={<MessageCircle size={18} />} tone="warning" trend="+6%" />
+        <StatCard title="Automation Health" value="96%" icon={<Zap size={18} />} tone="accent" trend="+1.2%" />
       </section>
 
       <SurfaceCard className="overflow-hidden">
