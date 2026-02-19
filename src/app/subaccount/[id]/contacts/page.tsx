@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Filter, Search } from "lucide-react";
 import {
   EmptyState,
