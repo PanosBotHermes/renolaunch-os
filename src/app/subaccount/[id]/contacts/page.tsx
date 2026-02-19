@@ -29,32 +29,22 @@ export default async function SubaccountContactsPage({ params }: { params: Promi
     <div className="space-y-6">
       <section>
         <h2 className="text-xl font-semibold tracking-tight text-reno-text-1">Contacts</h2>
-        <p className="text-sm text-reno-text-2">Subaccount-level contact and pipeline management</p>
+        <p className="text-sm text-reno-text-2">{contacts.length} contacts in this account</p>
       </section>
       <SurfaceCard className="p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr_1fr_1fr_auto]">
-          <div className="relative">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-reno-text-2" />
-            <FieldInput aria-label="Search contacts" className="pl-9" placeholder="Search contacts..." />
+            <FieldInput aria-label="Search contacts" className="w-full pl-9" placeholder="Search contacts..." />
           </div>
-          <FieldSelect aria-label="State filter" defaultValue=""><option value="">State</option></FieldSelect>
-          <FieldSelect aria-label="Trade filter" defaultValue=""><option value="">Trade</option></FieldSelect>
-          <FieldSelect aria-label="Status filter" defaultValue="">
-            <option value="">Status</option>
-            <option value="NEW">New</option>
-            <option value="CONTACTED">Contacted</option>
-            <option value="REPLIED">Replied</option>
-            <option value="QUALIFIED">Qualified</option>
-            <option value="BOOKED">Booked</option>
-          </FieldSelect>
-          <SecondaryButton className="w-full lg:w-auto"><Filter size={15} />Filter</SecondaryButton>
+          <SecondaryButton><Filter size={15} />Filter</SecondaryButton>
         </div>
       </SurfaceCard>
       {contacts.length > 0 ? (
         <ContactsTableClient contacts={contacts} />
       ) : (
         <SurfaceCard className="p-5">
-          <EmptyState title="No contacts found" detail="This subaccount has no contacts yet." />
+          <EmptyState title="No contacts yet" detail="Contacts migrated from GHL will appear here." />
         </SurfaceCard>
       )}
     </div>
