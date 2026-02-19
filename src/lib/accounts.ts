@@ -11,6 +11,7 @@ export const subaccountOptions: SubaccountOption[] = [
   { id: "created-bathrooms", name: "Created Bathrooms", trade: "Bathroom Remodeling" },
   { id: "tree-climber-unlimited", name: "Tree Climber Unlimited", trade: "Tree Service" },
   { id: "heartland-tree", name: "Heartland Tree Service", trade: "Tree Service" },
+  { id: "k-and-j-specialties", name: "K & J Specialties", trade: "Tree Service" },
 ];
 
 export function getSubaccountName(id: string): string {
