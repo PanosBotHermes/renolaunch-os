@@ -4,12 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import {
-  formatSubaccountName,
-  getSubaccountName,
-  subaccountOptions,
-  type SubaccountOption,
-} from "@/lib/accounts";
+import { getSubaccountName, subaccountOptions } from "@/lib/accounts";
 import { cn } from "@/lib/cn";
 
 interface SwitcherItem {
@@ -20,8 +15,6 @@ interface SwitcherItem {
 export function AccountSwitcher({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [accounts, setAccounts] = useState<SubaccountOption[]>(subaccountOptions);
-  const [currentLabel, setCurrentLabel] = useState("Agency View");
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,68 +31,22 @@ export function AccountSwitcher({ compact = false }: { compact?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadAccounts() {
-      try {
-        const response = await fetch("/api/subaccounts", { cache: "no-store" });
-        if (!response.ok) return;
-
-        const data = (await response.json()) as Array<{
-          id: string;
-          name: string;
-          slug: string;
-        }>;
-
-        if (!active || !Array.isArray(data) || data.length === 0) return;
-
-        setAccounts(data.map((subaccount) => ({ id: subaccount.slug, name: subaccount.name })));
-      } catch {
-        // Keep fallback options when API isn't available.
-      }
-    }
-
-    void loadAccounts();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (pathname.startsWith("/agency")) {
-      setCurrentLabel("Agency View");
-      return;
-    }
-
-    const accountId = pathname.split("/")[2] ?? "renolaunch";
-    setCurrentLabel(formatSubaccountName(accountId));
-
-    let active = true;
-
-    async function resolveCurrentLabel() {
-      const name = await getSubaccountName(accountId);
-      if (active) setCurrentLabel(name);
-    }
-
-    void resolveCurrentLabel();
-
-    return () => {
-      active = false;
-    };
-  }, [pathname]);
-
   const items: SwitcherItem[] = useMemo(
     () => [
       { label: "Agency View", href: "/agency/dashboard" },
-      ...accounts.map((subaccount) => ({
+      ...subaccountOptions.map((subaccount) => ({
         label: subaccount.name,
         href: `/subaccount/${subaccount.id}/dashboard`,
       })),
     ],
-    [accounts],
+    [],
   );
+
+  const currentLabel = useMemo(() => {
+    if (pathname.startsWith("/agency")) return "Agency View";
+    const accountId = pathname.split("/")[2] ?? "renolaunch";
+    return getSubaccountName(accountId);
+  }, [pathname]);
 
   return (
     <div className="relative" ref={wrapperRef}>

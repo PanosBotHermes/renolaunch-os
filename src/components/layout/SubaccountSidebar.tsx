@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Cog,
@@ -15,27 +14,12 @@ import {
   Users,
   Building2,
 } from "lucide-react";
-import { formatSubaccountName, getSubaccountName } from "@/lib/accounts";
+import { getSubaccountName } from "@/lib/accounts";
 import { cn } from "@/lib/cn";
 
 export function SubaccountSidebar({ id }: { id: string }) {
   const pathname = usePathname();
-  const [accountName, setAccountName] = useState(() => formatSubaccountName(id));
-
-  useEffect(() => {
-    let active = true;
-
-    async function resolveName() {
-      const name = await getSubaccountName(id);
-      if (active) setAccountName(name);
-    }
-
-    void resolveName();
-
-    return () => {
-      active = false;
-    };
-  }, [id]);
+  const accountName = getSubaccountName(id);
 
   const subaccountNav = [
     { href: `/subaccount/${id}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
