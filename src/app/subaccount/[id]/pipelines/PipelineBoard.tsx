@@ -54,7 +54,7 @@ export function PipelineBoard({
   totalLegacy,
   totalActive,
 }: PipelineBoardProps) {
-  const [selectedStageKey, setSelectedStageKey] = useState(STAGE_CONFIG[0].key);
+  const [selectedStageKey, setSelectedStageKey] = useState<typeof STAGE_CONFIG[number]["key"]>(STAGE_CONFIG[0].key);
   const [legacyOpen, setLegacyOpen] = useState(false);
   const [legacySearch, setLegacySearch] = useState("");
 
